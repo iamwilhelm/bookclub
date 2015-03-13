@@ -10,25 +10,47 @@
 $(function() {
 
   Room = React.createClass({
-    componentDidMount: function() {
+    getInitialState: function() {
+      return { data: [] }
+    },
 
+    componentDidMount: function() {
     },
 
     render: function() {
       return(
         <div className="row">
-          <ChatHistory url={this.props.url + "/history.json"} />
-          <Summary url={this.props.url + "/summary.json"} />
+          <ChatHistory url={this.props.url + "/history.json"}
+                       onChange={this.handleChange}/>
+          <Summary data={this.state.data} />
         </div>
       );
+    },
+
+    handleChange: function(event) {
+      this.loadSummary(event.currentTarget.value);
+    },
+
+    loadSummary: function(text) {
+      console.log("load summary");
+
+      $.ajax({
+        url: (this.props.url + "/summary").toString(),
+        method: 'POST',
+        data: { data: text },
+      }).done(function(data, status, jqxhr) {
+        
+        this.setState(data);
+
+      }.bind(this)).fail(function(jqxhr, status, err) {
+
+        console.error(this.props.url, status, err.toString());
+
+      }.bind(this))
     },
   })
 
   ChatHistory = React.createClass({
-    getInitialState: function() {
-      return { data: "loading..." }
-    },
-
     componentDidMount: function() {
       //this.loadChatHistory();
       //setInterval(this.loadChatHistory, 2000);
@@ -38,9 +60,8 @@ $(function() {
       console.log("render history");
       return(
         <div className="col-md-6">
-          <textarea style={{ width: "100%" }} rows="20"
-            value={this.state.data}
-            onChange={this.handleChange} />
+          <textarea ref="chat" style={{ width: "100%" }} rows="20"
+            onChange={this.props.onChange} />
         </div>
       )
     },
@@ -61,42 +82,12 @@ $(function() {
       }.bind(this))
     },
 
-    handleChange: function(event) {
-      this.setState({ value: event.target.value })
-
-    },
-
   })
 
   Summary = React.createClass({
-    getInitialState: function() {
-      return { data: [ { sentence: "summarizing...", score: 100 } ] }
-    },
-
-    componentDidMount: function() {
-      this.loadSummary();
-    },
-
-    loadSummary: function() {
-      console.log("load summary");
-
-      $.ajax({
-        url: this.props.url,
-        dataType: 'json',
-      }).done(function(data, status, jqxhr) {
-        
-        this.setState(data);
-
-      }.bind(this)).fail(function(jqxhr, status, err) {
-
-        console.error(this.props.url, status, err.toString());
-
-      }.bind(this))
-    },
-
     render: function() {
-      console.log(this.state.data)
-      var sentences = this.state.data.map(function(sentence_data) {
+      console.log(this.props.data)
+      var sentences = this.props.data.map(function(sentence_data) {
         return (
           <p className="sentence" score={sentence_data['score']}>
             {sentence_data['sentence']}

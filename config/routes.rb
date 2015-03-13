@@ -4,7 +4,7 @@ Rails.application.routes.draw do
   resources :rooms do
     member do
       get 'history'
-      get 'summary'
+      post 'summary'
     end
   end
 

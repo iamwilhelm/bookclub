@@ -7,7 +7,7 @@ class RoomsController < ApplicationController
   end
 
   def summary
-    text = getData()
+    text = params[:data]
     article = OTS.parse(text)
     @summary = article.summarize(percent: 25)
     render json: { data: @summary }
